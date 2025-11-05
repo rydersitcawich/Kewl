@@ -1,41 +1,48 @@
 package main.java.org.sprinting;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
- * TaskRunner sequentially executes a list of tasks.
- * Later, this can be expanded to simulate multiple multiprocessors or a greedy scheduler.
+ * Represents one multiprocessor.
+ * Each runner maintains its own local queue of tasks.
  */
 public class TaskRunner {
-    private final List<Task> tasks;
+    private final String id;
+    private final Queue<Task> localQueue;
+    private int totalWork; // total remaining EpochUnits
 
-    public TaskRunner() {
-        this.tasks = new ArrayList<>();
+    public TaskRunner(String id) {
+        this.id = id;
+        this.localQueue = new LinkedList<>();
+        this.totalWork = 0;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getTotalWork() {
+        return totalWork;
     }
 
     public void addTask(Task task) {
-        tasks.add(task);
+        localQueue.add(task);
+        totalWork += task.getRemainingEpochUnits();
     }
 
     public void runAllTasks() {
-        System.out.println("Starting task execution...");
-
-        for (Task task : tasks) {
-            while (task.getState() != TaskState.COMPLETED) {
-                task.executeEpoch();
+        System.out.println("Running tasks on " + id + "...");
+        while (!localQueue.isEmpty()) {
+            Task current = localQueue.poll();
+            while (current.getState() != TaskState.COMPLETED) {
+                current.executeEpoch();
             }
+            totalWork -= current.getRemainingEpochUnits();
         }
-
-        System.out.println("All tasks completed.");
     }
 
-    public static void main(String[] args) {
-        TaskRunner runner = new TaskRunner();
-        runner.addTask(new Task("A", 3));
-        runner.addTask(new Task("B", 2));
-        runner.addTask(new Task("C", 5));
-
-        runner.runAllTasks();
+    @Override
+    public String toString() {
+        return id + " [Total Work=" + totalWork + ", Tasks in Queue=" + localQueue.size() + "]";
     }
 }
