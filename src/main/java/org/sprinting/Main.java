@@ -1,23 +1,34 @@
 package main.java.org.sprinting;
 
+import main.java.org.sprinting.model.*;
+import main.java.org.sprinting.coordinator.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+
 public class Main {
     public static void main(String[] args) {
-        Coordinator coordinator = new Coordinator(3); // 3 multiprocessors
+        List<TaskRunner> runners = new ArrayList<>();
+        runners.add(new TaskRunner("R1", 0.5));
+        runners.add(new TaskRunner("R2", 0.5));
+        runners.add(new TaskRunner("R3", 0.5));
+
+        GreedyScheduler scheduler = new GreedyScheduler(runners);
 
         // Stream of tasks
-        coordinator.submitTask(new Task("A", 3));
-        coordinator.submitTask(new Task("B", 5));
-        coordinator.submitTask(new Task("C", 2));
-        coordinator.submitTask(new Task("D", 4));
-        coordinator.submitTask(new Task("E", 1));
+        for (int i = 0; i < 10; i++) {
+            scheduler.assignTask(new Task("T" + i, (int) (Math.random() * 5 + 1)));
+        }
 
-        // Assign tasks greedily
-        coordinator.schedule();
+        EpochSimulator simulator = new EpochSimulator(runners);
 
-        coordinator.printStatus();
-
-        // Execute tasks across all runners
-        coordinator.executeAll();
+        // Simulate 5 epochs
+        for (int epoch = 0; epoch < 5; epoch++) {
+            simulator.runEpoch();
+        }
     }
 }
+
+
 
