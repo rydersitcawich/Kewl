@@ -1,12 +1,12 @@
 package main.java.org.sprinting.model;
 
 public class Task {
-    private final String id;
+    private final int id;
     private final int duration; // EpochUnits
     private int remainingEpochUnits;
     private TaskState state;
 
-    public Task(String id, int duration) {
+    public Task(int id, int duration) {
         this.id = id;
         this.duration = duration;
         this.remainingEpochUnits = duration;
@@ -38,6 +38,6 @@ public class Task {
 
     @Override
     public String toString() {
-        return String.format("Task{id='%s', remaining=%d, state=%s}", id, remainingEpochUnits, state);
+        return String.format("Task{id='%d', remaining=%d, state=%s}", id, remainingEpochUnits, state);
     }
 }

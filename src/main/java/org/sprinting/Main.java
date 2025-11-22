@@ -1,34 +1,42 @@
 package main.java.org.sprinting;
 
-import main.java.org.sprinting.model.*;
-import main.java.org.sprinting.coordinator.*;
+import main.java.org.sprinting.model.DataCenter;
+import main.java.org.sprinting.model.Task;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class Main {
+
     public static void main(String[] args) {
-        List<TaskRunner> runners = new ArrayList<>();
-        runners.add(new TaskRunner("R1", 0.5));
-        runners.add(new TaskRunner("R2", 0.5));
-        runners.add(new TaskRunner("R3", 0.5));
+        //configuration
+        int procsPerServer = 2;
+        int serversPerRack = 2;
+        int numRunners = 8; 
+        int numTasks = 20;
+        int epochs = 15; 
 
-        GreedyScheduler scheduler = new GreedyScheduler(runners);
-
-        // Stream of tasks
-        for (int i = 0; i < 10; i++) {
-            scheduler.assignTask(new Task("T" + i, (int) (Math.random() * 5 + 1)));
+        List<Task> tasks = new ArrayList<>();
+        for (int i = 0; i < numTasks; i++) {
+            tasks.add(new Task(i, 3));  
         }
 
-        EpochSimulator simulator = new EpochSimulator(runners);
+        // Initialize DataCenter
+        DataCenter dc = new DataCenter(procsPerServer, serversPerRack, numRunners, tasks);
 
-        // Simulate 5 epochs
-        for (int epoch = 0; epoch < 5; epoch++) {
-            simulator.runEpoch();
+        // Run simulation for multiple epochs
+        for (int epoch = 1; epoch <= epochs; epoch++) {
+            System.out.println("\n=== Epoch " + epoch + " ===");
+            dc.runEpoch();
+            printServerTemps(dc);
         }
     }
+
+    // Helper function to print server temperatures
+    private static void printServerTemps(DataCenter dc) {
+        System.out.println("Server temperatures:");
+        dc.getServerTemps().forEach((serverId, temp) ->
+                System.out.printf("  Server %d: %.2f\n", serverId, temp)
+        );
+    }
 }
-
-
-
