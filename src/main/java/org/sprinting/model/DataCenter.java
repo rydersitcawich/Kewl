@@ -21,7 +21,7 @@ public class DataCenter {
     List<Task> tasks;
     private Map<Integer, Double> serverTemps;
     private double[] hydrogelStates;
-    final int MAX_RACK_SPRINTS = 10;
+    final int MAX_RACK_SPRINTS = 6;
 
     public DataCenter(int procsPerServer, int serversPerRack, int numRunners, List<Task> init_tasks) {
         this.procsPerServer = procsPerServer;
@@ -33,7 +33,7 @@ public class DataCenter {
             int serverId = i / procsPerServer;
             int rackId = serverId / serversPerRack;
             serverTemps.putIfAbsent(serverId, 0.0);
-            runners.add(new TaskRunner(i, 0.5, serverId, rackId));
+            runners.add(new TaskRunner(i, 0.8, serverId, rackId));
         }
         scheduler = new GreedyScheduler(runners);
         hydrogelStates = new double[serverTemps.size()];
@@ -41,8 +41,8 @@ public class DataCenter {
 
     public void runEpoch() {
         System.out.println("\n--- New Epoch ---");
-
-        for (int i = 0; i < tasks.size(); i++) {
+        int initialTaskCount = tasks.size();
+        for (int i = 0; i < initialTaskCount; i++) {
             scheduler.assignTask(tasks.remove(0));
         }
 

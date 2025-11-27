@@ -27,7 +27,7 @@ public class RackPanel extends VBox {
     private Label powerLabel;
     private ProgressBar powerBar;
     
-    private static final int MAX_RACK_SPRINTS = 10;
+    private static final int MAX_RACK_SPRINTS = 6;
     
     public RackPanel(int rackId, List<TaskRunner> runners, int procsPerServer, int serversPerRack, DataCenter dataCenter) {
         this.rackId = rackId;
