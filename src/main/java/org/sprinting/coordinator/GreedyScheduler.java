@@ -1,7 +1,7 @@
-package main.java.org.sprinting.coordinator;
+package org.sprinting.coordinator;
 
-import main.java.org.sprinting.model.Task;
-import main.java.org.sprinting.model.TaskRunner;
+import org.sprinting.model.Task;
+import org.sprinting.model.TaskRunner;
 
 import java.util.Comparator;
 import java.util.List;

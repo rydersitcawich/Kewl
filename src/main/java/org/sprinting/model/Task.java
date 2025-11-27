@@ -1,4 +1,4 @@
-package main.java.org.sprinting.model;
+package org.sprinting.model;
 
 public class Task {
     private final int id;

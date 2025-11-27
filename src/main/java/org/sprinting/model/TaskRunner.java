@@ -1,4 +1,4 @@
-package main.java.org.sprinting.model;
+package org.sprinting.model;
 
 import java.util.LinkedList;
 import java.util.Queue;

@@ -1,7 +1,7 @@
-package main.java.org.sprinting;
+package org.sprinting;
 
-import main.java.org.sprinting.model.DataCenter;
-import main.java.org.sprinting.model.Task;
+import org.sprinting.model.DataCenter;
+import org.sprinting.model.Task;
 
 import java.util.ArrayList;
 import java.util.List;

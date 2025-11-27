@@ -1,4 +1,4 @@
-package main.java.org.sprinting.model;
+package org.sprinting.model;
 
 /**
  * Represents the possible states of a Task.
