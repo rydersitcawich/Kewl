@@ -1,6 +1,11 @@
 # Computational Sprinting Data Center Simulator
+## Setup
+1. mvn clean compile 
+2. mvn javafx:run    
+
+
 ## Overview
-This project simulates a data center environment with computational sprinting. The simulation models multiprocessors (TaskRunners) distributed across servers and racks, executing tasks while respecting thermal and power constraints.
+This project simulates a data center environment with computational sprinting. The simulation models multiprocessors (TaskRunners) distributed across servers and racks, executing tasks while respecting thermal and power constraints. There is also a GUI to provide a visual representation of this model.
 
 Key features include:
 * Task execution with sprinting: Each TaskRunner can “sprint” to accelerate task completion, subject to thresholds and recovery periods.
@@ -9,6 +14,7 @@ Key features include:
 * Dynamic task assignment: Tasks are scheduled using a greedy scheduler, which assigns new tasks to the least-loaded runner.
 * Flexible simulation: Tasks can be added dynamically at any point during simulation.
 This setup provides a platform to experiment with computational sprinting strategies, resource contention, and recovery mechanisms in a simplified, yet structured, datacenter environment.
+* GUI for visual representation
 
 ## Components
 ### DataCenter
