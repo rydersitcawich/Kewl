@@ -55,9 +55,12 @@ public class TaskRunner {
         isSprinting = true;
     }
 
-    private double calculateUtility() {
-        // TODO: replace with actual utility computation
-        return Math.random(); // placeholder
+    private double calculateUtility() { 
+        Task currTask = taskQueue.peek();
+        if (currTask == null) {
+            return 0.0;
+        }
+        return currTask.getUtility(); // a little naive but probably fine...
     }
 
     public void executeEpoch() {

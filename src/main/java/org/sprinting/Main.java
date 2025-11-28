@@ -2,6 +2,7 @@ package org.sprinting;
 
 import org.sprinting.model.DataCenter;
 import org.sprinting.model.Task;
+import java.util.Random;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ public class Main {
 
         List<Task> tasks = new ArrayList<>();
         for (int i = 0; i < numTasks; i++) {
+            Random rand = new Random();
             tasks.add(new Task(i, 3));  
         }
 

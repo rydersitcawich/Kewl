@@ -220,7 +220,7 @@ public class DataCenterGUI extends Application {
         int numTasks = 5 + (int)(Math.random() * 10);
         List<Task> newTasks = new ArrayList<>();
         for (int i = 0; i < numTasks; i++) {
-            newTasks.add(new Task(1000 + currentEpoch * 100 + i, 3 + (int)(Math.random() * 5)));
+            newTasks.add(new Task(Task.getNumberOfTasksCreated(), 3 + (int)(Math.random() * 5)));
         }
         dataCenter.addTasks(newTasks);
         log("Added " + numTasks + " new tasks to the queue");

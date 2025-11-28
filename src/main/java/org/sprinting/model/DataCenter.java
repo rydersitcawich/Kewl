@@ -33,14 +33,14 @@ public class DataCenter {
             int serverId = i / procsPerServer;
             int rackId = serverId / serversPerRack;
             serverTemps.putIfAbsent(serverId, 0.0);
-            runners.add(new TaskRunner(i, 0.8, serverId, rackId));
+            runners.add(new TaskRunner(i, 0.75, serverId, rackId));
         }
         scheduler = new GreedyScheduler(runners);
         hydrogelStates = new double[serverTemps.size()];
     }
 
     public void runEpoch() {
-        System.out.println("\n--- New Epoch ---");
+        // System.out.println("\n--- New Epoch ---");
         int initialTaskCount = tasks.size();
         for (int i = 0; i < initialTaskCount; i++) {
             scheduler.assignTask(tasks.remove(0));
@@ -76,7 +76,7 @@ public class DataCenter {
                         runner.updateEpochsInRecoveryForThermalFailure();
                     }
                 }
-                System.out.println("Server " + serverId + " overheated! All runners cooling.");
+                // System.out.println("Server " + serverId + " overheated! All runners cooling.");
             }
         }
         
@@ -97,14 +97,14 @@ public class DataCenter {
                         runner.updateEpochsInRecoveryForPowerFailure();
                     }
                 }
-                System.out.println("Rack " + rackId + " exceeded power limit! All runners recovering.");
+                // System.out.println("Rack " + rackId + " exceeded power limit! All runners recovering.");
             }
         }
 
         for (TaskRunner runner : runners) {
             runner.executeEpoch();
             runner.updateState();
-            System.out.println(runner);
+            // System.out.println(runner);
         }
     }
 
