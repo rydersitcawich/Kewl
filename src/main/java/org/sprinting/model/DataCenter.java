@@ -153,4 +153,23 @@ public class DataCenter {
     public double[] getHydrogelStates() {
         return hydrogelStates;
     }
+
+    public double[] getChipTemps() {
+            return chipTemps;
+    }
+
+    public double getChipTemp(int runnerId) {
+        if (runnerId >= 0 && runnerId < chipTemps.length) {
+            return chipTemps[runnerId];
+        }
+        return 0.0;
+    }
+
+    public double getHydrogelState(int runnerId) {
+        if (runnerId >= 0 && runnerId < hydrogelStates.length) {
+            return hydrogelStates[runnerId];
+        }
+        return 0.0;
+    }
+
 }

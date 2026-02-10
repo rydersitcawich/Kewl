@@ -247,10 +247,23 @@ public class DataCenterGUI extends Application {
         long idle = dataCenter.getRunners().stream().filter(r -> r.getTotalWork() == 0).count();
         int pendingTasks = dataCenter.getTasks().size();
         
-        double avgTemp = dataCenter.getServerTemps().values().stream()
-                .mapToDouble(Double::doubleValue)
-                .average()
-                .orElse(0.0);
+        // Calculate average chip temperature and hydrogel state
+        double[] chipTemps = dataCenter.getChipTemps();
+        double[] hydrogelStates = dataCenter.getHydrogelStates();
+        
+        double avgTemp = 0.0;
+        double avgHydrogel = 0.0;
+        int overheatedChips = 0;
+        
+        for (int i = 0; i < chipTemps.length; i++) {
+            avgTemp += chipTemps[i];
+            avgHydrogel += hydrogelStates[i];
+            if (chipTemps[i] >= 1.0) {
+                overheatedChips++;
+            }
+        }
+        avgTemp /= chipTemps.length;
+        avgHydrogel /= hydrogelStates.length;
         
         String stats = String.format(
             "Runners: %d\n" +
@@ -258,8 +271,11 @@ public class DataCenterGUI extends Application {
             "  Recovering: %d\n" +
             "  Idle: %d\n" +
             "\nPending Tasks: %d\n" +
-            "\nAvg Temperature: %.2f",
-            totalRunners, sprinting, recovering, idle, pendingTasks, avgTemp
+            "\nAvg Chip Temp: %.2f\n" +
+            "Overheated Chips: %d\n" +
+            "Avg Hydrogel: %.2f",
+            totalRunners, sprinting, recovering, idle, pendingTasks, 
+            avgTemp, overheatedChips, avgHydrogel
         );
         
         statsLabel.setText(stats);
