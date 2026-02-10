@@ -14,29 +14,24 @@ import org.sprinting.coordinator.GreedyScheduler;
  */
 
 public class DataCenter {
-    private int procsPerServer;
-    private int serversPerRack;
     List<TaskRunner> runners;
     GreedyScheduler scheduler;
     List<Task> tasks;
-    private Map<Integer, Double> serverTemps;
+    private double[] chipTemps;
     private double[] hydrogelStates;
     final int MAX_RACK_SPRINTS = 6;
 
     public DataCenter(int procsPerServer, int serversPerRack, int numRunners, List<Task> init_tasks) {
-        this.procsPerServer = procsPerServer;
-        this.serversPerRack = serversPerRack;
         this.runners = new LinkedList<>();
         this.tasks = init_tasks;
-        this.serverTemps = new HashMap<>();
+        this.chipTemps = new double[numRunners];
         for (int i = 0; i < numRunners; i++) {
             int serverId = i / procsPerServer;
             int rackId = serverId / serversPerRack;
-            serverTemps.putIfAbsent(serverId, 0.0);
             runners.add(new TaskRunner(i, 0.75, serverId, rackId));
         }
         scheduler = new GreedyScheduler(runners);
-        hydrogelStates = new double[serverTemps.size()];
+        hydrogelStates = new double[numRunners];
     }
 
     public void runEpoch() {
@@ -50,34 +45,45 @@ public class DataCenter {
             runner.evaluateSprint();
         }
 
-        Map<Integer, Integer> sprintersPerServer = new HashMap<>();
-        for (TaskRunner runner : runners) {
-            if (runner.isSprinting()) {
-                sprintersPerServer.merge(runner.getServerId(), 1, Integer::sum);
+        // Map<Integer, Integer> sprintersPerServer = new HashMap<>();
+        // for (TaskRunner runner : runners) {
+        //     if (runner.isSprinting()) {
+        //         sprintersPerServer.merge(runner.getServerId(), 1, Integer::sum);
+        //     }
+        // }
+
+        // for (Map.Entry<Integer, Double> entry : serverTemps.entrySet()) {
+        //     int serverId = entry.getKey();
+        //     double temp = entry.getValue();
+        //     double hydrogelState = hydrogelStates[serverId];
+        //     int sprinters = sprintersPerServer.getOrDefault(serverId, 0);
+
+        //     temp = computeNewTemperature(temp, sprinters, hydrogelState);
+        //     temp = Math.max(0.0, Math.min(1.0, temp));
+        //     serverTemps.put(serverId, temp);
+
+        //     hydrogelState = computeNewHydrogelState(hydrogelState, sprinters, hydrogelState);
+        //     hydrogelStates[serverId] = hydrogelState;
+
+        //     if (temp >= 1.0) {
+        //         for (TaskRunner runner : runners) {
+        //             if (runner.getServerId() == serverId) {
+        //                 runner.updateEpochsInRecoveryForThermalFailure();
+        //             }
+        //         }
+        //         // System.out.println("Server " + serverId + " overheated! All runners cooling.");
+        //     }
+        // }
+        //need to update chiptemps
+        for (int i = 0; i < runners.size(); i++) {
+            double tempChipTemp = chipTemps[i];
+            chipTemps[i] = computeNewTemperature(chipTemps[i], 
+                runners.get(i).isSprinting(), hydrogelStates[i]);
+            if (chipTemps[i] == 1.0) {
+                runners.get(i).updateEpochsInRecoveryForThermalFailure();
             }
-        }
-
-        for (Map.Entry<Integer, Double> entry : serverTemps.entrySet()) {
-            int serverId = entry.getKey();
-            double temp = entry.getValue();
-            double hydrogelState = hydrogelStates[serverId];
-            int sprinters = sprintersPerServer.getOrDefault(serverId, 0);
-
-            temp = computeNewTemperature(temp, sprinters, hydrogelState);
-            temp = Math.max(0.0, Math.min(1.0, temp));
-            serverTemps.put(serverId, temp);
-
-            hydrogelState = computeNewHydrogelState(hydrogelState, sprinters, hydrogelState);
-            hydrogelStates[serverId] = hydrogelState;
-
-            if (temp >= 1.0) {
-                for (TaskRunner runner : runners) {
-                    if (runner.getServerId() == serverId) {
-                        runner.updateEpochsInRecoveryForThermalFailure();
-                    }
-                }
-                // System.out.println("Server " + serverId + " overheated! All runners cooling.");
-            }
+            hydrogelStates[i] = computeNewHydrogelState(tempChipTemp, 
+                runners.get(i).isSprinting(), hydrogelStates[i]);
         }
         
         Map<Integer, Integer> sprintersPerRack = new HashMap<>();
@@ -100,29 +106,29 @@ public class DataCenter {
                 // System.out.println("Rack " + rackId + " exceeded power limit! All runners recovering.");
             }
         }
-
+        // if no failures then proceed
         for (TaskRunner runner : runners) {
             runner.executeEpoch();
             runner.updateState();
-            // System.out.println(runner);
         }
     }
 
-    public static double computeNewTemperature(double currentTemp, int sprinters, double hydrogelState) {
-        double heating = sprinters * 0.1;
-        double cooling = 0.05;
-        return Math.max(0.0, currentTemp + heating - cooling);
+    public static double computeNewTemperature(double currentTemp, boolean isSprinting, double hydrogelState) {
+        if (hydrogelState > 0) {
+            return currentTemp;
+        }
+        return isSprinting ? Math.min(1.0, currentTemp + 0.15) : Math.max(0.0, currentTemp - 0.05);
+        
     }
 
-    public static double computeNewHydrogelState(double currentState, int sprinters, double hydrogelState) {
-        double saturationIncrease = sprinters * 0.05;
-        double recovery = 0.02;
-        return Math.max(0.0, Math.min(1.0, currentState + saturationIncrease - recovery));
+    public static double computeNewHydrogelState(double currentTemp, boolean isSprinting, double hydrogelState) {
+        if (isSprinting) {
+            return Math.max(0.0, hydrogelState - 0.1);
+        } else {
+            return Math.min(1.0, hydrogelState + 0.05);
+        }
     }
 
-    public Map<Integer, Double> getServerTemps() {
-        return serverTemps;
-    }
 
     public List<Task> getTasks() {
         return tasks;
