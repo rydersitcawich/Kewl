@@ -94,11 +94,11 @@ public class SprintingBellmanDemo {
     public static class Result {
         public boolean converged;
         int outerIters;
-        double ptrip;
+        public double ptrip;
         public double thresholdUT;
         double pSprint;
         double pActive;
-        double expectedNSprinters;
+        public double expectedNSprinters;
         double V_A, V_C, V_R;
     }
 

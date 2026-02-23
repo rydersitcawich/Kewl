@@ -24,8 +24,13 @@ public class Task {
         this.duration = duration;
         this.remainingEpochUnits = duration;
         this.state = TaskState.PENDING;
-        //generate utility from normal distribution [0,1]
-        this.utility = clampedNormal(0.5, 0.15);
+        // 70% of tasks have low utility, 30% have high utility
+        Random rand = new Random();
+        if (rand.nextDouble() < 0.7) {
+            this.utility = clampedNormal(0.2, 0.08); // low-benefit tasks
+        } else {
+            this.utility = clampedNormal(0.8, 0.08); // high-benefit tasks
+        }
         numTasksCreated++;
         System.out.println("Generated utility " + this.utility + " for task " + id);
     }
