@@ -9,7 +9,7 @@ import org.sprinting.model.DataCenter;
 import org.sprinting.model.TaskRunner;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.Map;
 
@@ -72,7 +72,7 @@ public class RackPanel extends VBox {
         getChildren().add(powerBox);
         
         // Group runners by server
-        Map<Integer, List<TaskRunner>> serverMap = new HashMap<>();
+        Map<Integer, List<TaskRunner>> serverMap = new TreeMap<>();
         for (TaskRunner runner : runners) {
             serverMap.computeIfAbsent(runner.getServerId(), k -> new ArrayList<>()).add(runner);
         }

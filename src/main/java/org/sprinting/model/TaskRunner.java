@@ -14,7 +14,7 @@ public class TaskRunner {
     private final int RACK_ID;
     private final Queue<Task> taskQueue;
     private boolean isSprinting;
-    private final double sprintThreshold; // placeholder threshold for utility-based sprinting
+    private double sprintThreshold; // placeholder threshold for utility-based sprinting
     private int epochsInRecovery; //number of epochs till we have fully recovered. 0 means we are in active state. When we have a power or thermal failure, we set this to some positive integer.
     private final int COOLING_EPOCHS = 5; //placeholder for num epochs to recover from thermal failure
     private final int POWER_EPOCHS = 5; //placeholder for num epochs to recover from power failure
@@ -41,11 +41,9 @@ public class TaskRunner {
      * Determines whether to sprint based on calculated utility and threshold.
      */
     public void evaluateSprint() {
-        if (epochsInRecovery > 0) { // we are recovering
-            return;
-        }
-
-        double utility = calculateUtility(); 
+        isSprinting = false;
+        if (epochsInRecovery > 0) return;
+        double utility = calculateUtility();
         if (utility > sprintThreshold) {
             startSprint();
         }
@@ -107,6 +105,15 @@ public class TaskRunner {
 
     public int getRackId() {
         return RACK_ID;
+    }
+
+    public double getCurrentUtility() {
+        Task t = taskQueue.peek();
+        return t == null ? 0.0 : t.getUtility();
+    }
+
+    public void setSprintThreshold(double newThreshold) {
+        this.sprintThreshold = newThreshold;
     }
 
     @Override

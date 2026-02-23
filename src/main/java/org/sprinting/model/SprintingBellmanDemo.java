@@ -1,3 +1,4 @@
+package org.sprinting.model;
 import java.util.*;
 import java.util.function.DoubleUnaryOperator;
 
@@ -22,21 +23,21 @@ import java.util.function.DoubleUnaryOperator;
 public class SprintingBellmanDemo {
 
     // ==== Parameters from the paper (Table 2) and text ====
-    static class Params {
-        int N = 1000;                 // number of agents in rack
-        int Nmin = 250;               // trip curve lower knee (Fig. 3)
-        int Nmax = 750;               // trip curve upper knee (Fig. 3)
-        double pc = 0.50;             // P(stay cooling)  -> Δt_cool ≈ 1/(1-pc)
-        double pr = 0.88;             // P(stay recovery) -> Δt_rec  ≈ 1/(1-pr)
-        double delta = 0.99;          // discount factor
+    public static class Params {
+        public int N = 1000;                 // number of agents in rack
+        public int Nmin = 250;               // trip curve lower knee (Fig. 3)
+        public int Nmax = 750;               // trip curve upper knee (Fig. 3)
+        public double pc = 0.50;             // P(stay cooling)  -> Δt_cool ≈ 1/(1-pc)
+        public double pr = 0.88;             // P(stay recovery) -> Δt_rec  ≈ 1/(1-pr)
+        public double delta = 0.99;          // discount factor
         // Utility domain [uMin, uMax] (normalized TPS-like)
-        double uMin = 0.0;
-        double uMax = 12.0;           // allows >10× spikes
-        int gridU = 800;              // discretization for u ∈ [uMin, uMax]
+        public double uMin = 0.0;
+        public double uMax = 1.0;           // allows >10× spikes
+        public int gridU = 800;              // discretization for u ∈ [uMin, uMax]
     }
 
     // ==== Utility distribution f(u) ====
-    interface UtilityDistribution {
+    public interface UtilityDistribution {
         double pdf(double u);
         double uMin();
         double uMax();
@@ -51,7 +52,7 @@ public class SprintingBellmanDemo {
     }
 
     // Narrow Gaussian-ish profile (LinearRegression-like)
-    static class NarrowGaussian implements UtilityDistribution {
+    public static class NarrowGaussian implements UtilityDistribution {
         final double mu, sigma, uMin, uMax;
         public NarrowGaussian(double mu, double sigma, double uMin, double uMax) {
             this.mu = mu; this.sigma = sigma; this.uMin = uMin; this.uMax = uMax;
@@ -66,7 +67,7 @@ public class SprintingBellmanDemo {
     }
 
     // Bimodal Gaussian mixture (PageRank-like)
-    static class BimodalGaussian implements UtilityDistribution {
+    public static class BimodalGaussian implements UtilityDistribution {
         final double mu1, s1, w1, mu2, s2, w2, uMin, uMax;
         public BimodalGaussian(double mu1, double s1, double w1,
                                double mu2, double s2, double w2,
@@ -90,18 +91,18 @@ public class SprintingBellmanDemo {
     }
 
     // ==== Solver for the nested fixed points (Bellman + mean-field) ====
-    static class Result {
-        boolean converged;
+    public static class Result {
+        public boolean converged;
         int outerIters;
         double ptrip;
-        double thresholdUT;
+        public double thresholdUT;
         double pSprint;
         double pActive;
         double expectedNSprinters;
         double V_A, V_C, V_R;
     }
 
-    static class BellmanMeanFieldSolver {
+    public static class BellmanMeanFieldSolver {
         final Params P;
         final UtilityDistribution dist;
         final double[] gridU;

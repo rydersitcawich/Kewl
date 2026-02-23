@@ -1,11 +1,13 @@
 /Users/ryder/Kewl/src/main/java/org/sprinting/model/DataCenter.java
+/Users/ryder/Kewl/src/main/java/org/sprinting/gui/DataCenterView.java
+/Users/ryder/Kewl/src/main/java/org/sprinting/gui/RackPanel.java
+/Users/ryder/Kewl/src/main/java/org/sprinting/coordinator/SprintCoordinator.java
+/Users/ryder/Kewl/src/main/java/org/sprinting/model/TaskState.java
+/Users/ryder/Kewl/src/main/java/org/sprinting/gui/DataCenterGUI.java
 /Users/ryder/Kewl/src/main/java/org/sprinting/model/TaskRunner.java
 /Users/ryder/Kewl/src/main/java/org/sprinting/model/Task.java
-/Users/ryder/Kewl/src/main/java/org/sprinting/gui/DataCenterView.java
 /Users/ryder/Kewl/src/main/java/org/sprinting/Main.java
+/Users/ryder/Kewl/src/main/java/org/sprinting/model/SprintingBellmanDemo.java
 /Users/ryder/Kewl/src/main/java/org/sprinting/gui/ServerPanel.java
-/Users/ryder/Kewl/src/main/java/org/sprinting/gui/RackPanel.java
 /Users/ryder/Kewl/src/main/java/org/sprinting/gui/TaskRunnerPanel.java
-/Users/ryder/Kewl/src/main/java/org/sprinting/model/TaskState.java
 /Users/ryder/Kewl/src/main/java/org/sprinting/coordinator/GreedyScheduler.java
-/Users/ryder/Kewl/src/main/java/org/sprinting/gui/DataCenterGUI.java

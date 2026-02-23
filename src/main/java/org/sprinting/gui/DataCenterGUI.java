@@ -23,6 +23,8 @@ public class DataCenterGUI extends Application {
     private DataCenterView dataCenterView;
     private Label epochLabel;
     private Label statsLabel;
+    private Label thresholdLabel;
+    private Label nextRecomputeLabel;  
     private TextArea logArea;
     private Button playPauseButton;
     private Button stepButton;
@@ -153,6 +155,13 @@ public class DataCenterGUI extends Application {
         metricsPanel.setPadding(new Insets(10));
         metricsPanel.setPrefWidth(300);
         metricsPanel.setStyle("-fx-background-color: #34495e; -fx-background-radius: 5;");
+
+        thresholdLabel = new Label("Sprint Threshold: ---");
+        thresholdLabel.setStyle("-fx-text-fill: #2ecc71; -fx-font-family: monospace; -fx-font-weight: bold; -fx-font-size: 13px;");
+
+        nextRecomputeLabel = new Label("Next Recompute: ---");
+        nextRecomputeLabel.setStyle("-fx-text-fill: #3498db; -fx-font-family: monospace; -fx-font-size: 12px;");
+
         
         Label metricsTitle = new Label("System Metrics");
         metricsTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
@@ -169,7 +178,7 @@ public class DataCenterGUI extends Application {
         logArea.setPrefRowCount(20);
         logArea.setStyle("-fx-control-inner-background: #2c3e50; -fx-text-fill: #ecf0f1; -fx-font-family: monospace;");
         
-        metricsPanel.getChildren().addAll(metricsTitle, statsLabel, new Separator(), logTitle, logArea);
+        metricsPanel.getChildren().addAll(metricsTitle, thresholdLabel, nextRecomputeLabel, statsLabel, new Separator(), logTitle, logArea);
         return metricsPanel;
     }
     
@@ -279,6 +288,10 @@ public class DataCenterGUI extends Application {
         );
         
         statsLabel.setText(stats);
+        thresholdLabel.setText(String.format("Sprint Threshold: %.4f", dataCenter.getCurrentThreshold()));
+
+        int epochsUntilRecompute = dataCenter.getEpochsUntilRecompute();
+        nextRecomputeLabel.setText("Next Recompute: " + epochsUntilRecompute + " epoch(s)");
     }
     
     private void log(String message) {

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.sprinting.coordinator.GreedyScheduler;
+import org.sprinting.coordinator.SprintCoordinator;
 
 /**
  * Represents the data center configuration with # of multiprocessors in a server, 
@@ -20,6 +21,7 @@ public class DataCenter {
     private double[] chipTemps;
     private double[] hydrogelStates;
     final int MAX_RACK_SPRINTS = 6;
+    SprintCoordinator coordinator; 
 
     public DataCenter(int procsPerServer, int serversPerRack, int numRunners, List<Task> init_tasks) {
         this.runners = new LinkedList<>();
@@ -32,10 +34,11 @@ public class DataCenter {
         }
         scheduler = new GreedyScheduler(runners);
         hydrogelStates = new double[numRunners];
+        this.coordinator = new SprintCoordinator(10); // thresholds are recomputed every 30 epochs
     }
 
     public void runEpoch() {
-        // System.out.println("\n--- New Epoch ---");
+        coordinator.onEpoch(runners);
         int initialTaskCount = tasks.size();
         for (int i = 0; i < initialTaskCount; i++) {
             scheduler.assignTask(tasks.remove(0));
@@ -117,7 +120,7 @@ public class DataCenter {
         if (hydrogelState > 0) {
             return currentTemp;
         }
-        return isSprinting ? Math.min(1.0, currentTemp + 0.15) : Math.max(0.0, currentTemp - 0.05);
+        return isSprinting ? Math.min(1.0, currentTemp + 0.25) : Math.max(0.0, currentTemp - 0.05);
         
     }
 
@@ -170,6 +173,14 @@ public class DataCenter {
             return hydrogelStates[runnerId];
         }
         return 0.0;
+    }
+
+    public double getCurrentThreshold() {
+        return coordinator.getCurrentThreshold();
+    }
+
+    public int getEpochsUntilRecompute() {
+        return coordinator.getEpochsUntilRecompute();
     }
 
 }
