@@ -55,14 +55,12 @@ public class TaskRunnerPanel extends VBox {
         // Temperature bar
         tempBar = new ProgressBar(0);
         tempBar.setPrefWidth(60);
-        tempBar.setPrefHeight(6);
-        tempBar.setStyle("-fx-accent: #3498db;");
-        
+        tempBar.setPrefHeight(12);
+
         // Hydrogel bar
         hydrogelBar = new ProgressBar(0);
         hydrogelBar.setPrefWidth(60);
-        hydrogelBar.setPrefHeight(6);
-        hydrogelBar.setStyle("-fx-accent: #1abc9c;");
+        hydrogelBar.setPrefHeight(12);
         
         // Tooltip for detailed info
         tooltip = new Tooltip();
@@ -121,23 +119,23 @@ public class TaskRunnerPanel extends VBox {
         // Update temperature bar
         tempBar.setProgress(chipTemp);
         if (chipTemp >= 1.0) {
-            tempBar.setStyle("-fx-accent: #e74c3c;"); // Red - at limit (throttling)
+            setBarColor(tempBar, "#e74c3c"); // Red - at limit
         } else if (chipTemp >= 0.7) {
-            tempBar.setStyle("-fx-accent: #f39c12;"); // Orange - hot
+            setBarColor(tempBar, "#f39c12"); // Orange - hot
         } else if (chipTemp >= 0.4) {
-            tempBar.setStyle("-fx-accent: #f1c40f;"); // Yellow - warm
+            setBarColor(tempBar, "#f1c40f"); // Yellow - warm
         } else {
-            tempBar.setStyle("-fx-accent: #3498db;"); // Blue - cool
+            setBarColor(tempBar, "#3498db"); // Blue - cool
         }
-        
+
         // Update hydrogel bar
         hydrogelBar.setProgress(hydrogelState);
         if (hydrogelState <= 0.2) {
-            hydrogelBar.setStyle("-fx-accent: #e74c3c;"); // Red - depleted
+            setBarColor(hydrogelBar, "#e74c3c"); // Red - depleted
         } else if (hydrogelState <= 0.5) {
-            hydrogelBar.setStyle("-fx-accent: #f39c12;"); // Orange - low
+            setBarColor(hydrogelBar, "#f39c12"); // Orange - low
         } else {
-            hydrogelBar.setStyle("-fx-accent: #1abc9c;"); // Teal - good
+            setBarColor(hydrogelBar, "#1abc9c"); // Teal - good
         }
         
         // Update tooltip
@@ -161,6 +159,14 @@ public class TaskRunnerPanel extends VBox {
         ));
     }
     
+    private void setBarColor(javafx.scene.control.ProgressBar bar, String color) {
+        bar.setStyle("-fx-accent: " + color + ";");
+        javafx.scene.Node barNode = bar.lookup(".bar");
+        if (barNode != null) {
+            barNode.setStyle("-fx-background-color: " + color + ";");
+        }
+    }
+
     private String darkenColor(String hexColor) {
         // Simple darkening by reducing each RGB component
         try {

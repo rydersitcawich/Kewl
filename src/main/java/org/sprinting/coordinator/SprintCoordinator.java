@@ -2,6 +2,7 @@ package org.sprinting.coordinator;
 
 import org.sprinting.model.TaskRunner;
 import org.sprinting.model.SprintingBellmanDemo;
+import java.util.Arrays;
 import java.util.List;
 
 public class SprintCoordinator {
@@ -16,6 +17,9 @@ public class SprintCoordinator {
     public SprintCoordinator(int recomputeInterval) {
         this.recomputeInterval = recomputeInterval;
         this.params = new SprintingBellmanDemo.Params();
+        // Match simulation's deterministic 5-epoch recovery: geometric mean = 1/(1-p) = 5 → p = 0.8
+        this.params.pc = 0.8;
+        this.params.pr = 0.8;
     }
 
     public void onEpoch(List<TaskRunner> runners) {
@@ -28,10 +32,10 @@ public class SprintCoordinator {
 
     private void recomputeThresholds(List<TaskRunner> runners) {
 
-        int runnersPerRack = 10; // matches your SERVERS_PER_RACK * PROCS_PER_SERVER
+        int runnersPerRack = 20; // SERVERS_PER_RACK(10) * PROCS_PER_SERVER(2) = 20
         params.N    = runnersPerRack;
-        params.Nmin = 2;   // ~25% of 10, paper uses Nmin = 0.25*N
-        params.Nmax = 6;   // matches your MAX_RACK_SPRINTS
+        params.Nmin = 3;   // safe zone: ~15% of 20, below breaker threshold
+        params.Nmax = 6;   // = MAX_RACK_SPRINTS (hard power limit)
     
         double[] utilities = runners.stream()
             .mapToDouble(r -> r.getCurrentUtility())
@@ -40,18 +44,28 @@ public class SprintCoordinator {
     
         if (utilities.length == 0) return;
     
-        double mean = 0, variance = 0;
-        for (double u : utilities) mean += u;
-        mean /= utilities.length;
-        for (double u : utilities) variance += (u - mean) * (u - mean);
-        double std = Math.sqrt(variance / utilities.length);
-        std = Math.max(std, 0.01);
-    
         params.uMin = 0.0;
         params.uMax = 1.0;
-    
-        SprintingBellmanDemo.UtilityDistribution dist =
-            new SprintingBellmanDemo.NarrowGaussian(mean, std, params.uMin, params.uMax);
+
+        // Split at 0.5 to fit a 2-component GMM matching the bimodal task distribution.
+        // Using a single NarrowGaussian over-estimates pSprint between the modes, which
+        // drives ptrip → 1 and collapses the threshold to 0 (sprint-everything death spiral).
+        double[] low  = Arrays.stream(utilities).filter(u -> u <  0.5).toArray();
+        double[] high = Arrays.stream(utilities).filter(u -> u >= 0.5).toArray();
+
+        SprintingBellmanDemo.UtilityDistribution dist;
+        if (low.length >= 5 && high.length >= 5) {
+            double w1 = (double) low.length  / utilities.length;
+            double w2 = (double) high.length / utilities.length;
+            double mu1 = mean(low),  s1 = Math.max(std(low),  0.01);
+            double mu2 = mean(high), s2 = Math.max(std(high), 0.01);
+            dist = new SprintingBellmanDemo.BimodalGaussian(mu1, s1, w1, mu2, s2, w2, params.uMin, params.uMax);
+        } else {
+            // Not enough samples in one cluster — fall back to single Gaussian
+            double mu = mean(utilities);
+            double s  = Math.max(std(utilities), 0.01);
+            dist = new SprintingBellmanDemo.NarrowGaussian(mu, s, params.uMin, params.uMax);
+        }
     
         SprintingBellmanDemo.BellmanMeanFieldSolver solver =
             new SprintingBellmanDemo.BellmanMeanFieldSolver(params, dist);
@@ -65,8 +79,8 @@ public class SprintCoordinator {
             double rawThreshold = result.thresholdUT;
             double normalizedThreshold = rawThreshold / params.uMax;
             
-            // Clamp to a sensible range so it always sits between the two modes
-            double finalThreshold = Math.max(0.4, Math.min(0.6, normalizedThreshold));
+            // Sanity-check bounds only — root causes fixed, no longer need hard clamp
+            double finalThreshold = Math.max(0.05, Math.min(0.95, normalizedThreshold));
             
             System.out.printf("Raw u_T*=%.4f → final threshold=%.4f%n", rawThreshold, finalThreshold);
             
@@ -82,5 +96,17 @@ public class SprintCoordinator {
 
     public int getEpochsUntilRecompute() {
         return recomputeInterval - epochsSinceLastRecompute;
+    }
+
+    private static double mean(double[] a) {
+        double s = 0;
+        for (double v : a) s += v;
+        return s / a.length;
+    }
+
+    private static double std(double[] a) {
+        double m = mean(a), s = 0;
+        for (double v : a) s += (v - m) * (v - m);
+        return Math.sqrt(s / a.length);
     }
 }

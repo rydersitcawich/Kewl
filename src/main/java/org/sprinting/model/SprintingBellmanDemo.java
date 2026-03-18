@@ -140,8 +140,10 @@ public class SprintingBellmanDemo {
                         V_A_of_u[i] = Math.max(VS, VnS);
                     }
 
-                    // New expected V(A) = ∫ V(u,A) f(u) du
+                    // New expected V(A) = ∫ V(u,A) f(u) du  (normalize for truncated pdf)
+                    double normInner = integrate(u -> dist.pdf(u));
                     double VAnew = integrate(u -> V_A_of_u[idx(u)] * dist.pdf(u));
+                    if (normInner > 1e-10) VAnew /= normInner;
                     if (Math.abs(VAnew - VA) < tolInner) {
                         V_A = VAnew;
 
@@ -151,7 +153,9 @@ public class SprintingBellmanDemo {
                         double V_C2 = (P.delta * ((1.0 - ptrip) * (1.0 - P.pc) * V_A + ptrip * V_R2)) / denomC2;
 
                         double uT = P.delta * (V_A - V_C2) * (1.0 - ptrip);
+                        double normConverged = integrate(u -> dist.pdf(u));
                         double pSprint = integrate(u -> (u >= uT ? 1.0 : 0.0) * dist.pdf(u));
+                        if (normConverged > 1e-10) pSprint /= normConverged;
                         pSprint = clamp(pSprint, 0.0, 1.0);
 
                         double pActive = (1.0 - P.pc) / (1.0 + pSprint - P.pc);
@@ -192,7 +196,9 @@ public class SprintingBellmanDemo {
             r.V_C = (P.delta * ((1.0 - ptrip) * (1.0 - P.pc) * V_A + ptrip * r.V_R)) / denomC;
             r.V_A = V_A;
             r.thresholdUT = P.delta * (r.V_A - r.V_C) * (1.0 - ptrip);
+            double normFallback = integrate(u -> dist.pdf(u));
             r.pSprint = integrate(u -> (u >= r.thresholdUT ? 1.0 : 0.0) * dist.pdf(u));
+            if (normFallback > 1e-10) r.pSprint /= normFallback;
             r.pActive = (1.0 - P.pc) / (1.0 + r.pSprint - P.pc);
             r.expectedNSprinters = r.pSprint * r.pActive * P.N;
             return r;

@@ -1,5 +1,6 @@
 package org.sprinting.model;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ public class DataCenter {
         }
         scheduler = new GreedyScheduler(runners);
         hydrogelStates = new double[numRunners];
+        Arrays.fill(hydrogelStates, 1.0); // start fully charged
         this.coordinator = new SprintCoordinator(10); // thresholds are recomputed every 30 epochs
     }
 
@@ -80,9 +82,10 @@ public class DataCenter {
         //need to update chiptemps
         for (int i = 0; i < runners.size(); i++) {
             double tempChipTemp = chipTemps[i];
-            chipTemps[i] = computeNewTemperature(chipTemps[i], 
+            chipTemps[i] = computeNewTemperature(chipTemps[i],
                 runners.get(i).isSprinting(), hydrogelStates[i]);
-            if (chipTemps[i] == 1.0) {
+            // Thermal failure only when chip is at max temp AND hydrogel is depleted
+            if (chipTemps[i] >= 1.0 && hydrogelStates[i] == 0.0) {
                 runners.get(i).updateEpochsInRecoveryForThermalFailure();
             }
             hydrogelStates[i] = computeNewHydrogelState(tempChipTemp, 
@@ -117,11 +120,8 @@ public class DataCenter {
     }
 
     public static double computeNewTemperature(double currentTemp, boolean isSprinting, double hydrogelState) {
-        if (hydrogelState > 0) {
-            return currentTemp;
-        }
+        // Temperature always tracks heat load — hydrogel prevents failure, not temperature change
         return isSprinting ? Math.min(1.0, currentTemp + 0.25) : Math.max(0.0, currentTemp - 0.05);
-        
     }
 
     public static double computeNewHydrogelState(double currentTemp, boolean isSprinting, double hydrogelState) {
