@@ -79,6 +79,7 @@ public class DataCenterGUI extends Application {
         // Handle window close
         primaryStage.setOnCloseRequest(e -> {
             stopSimulation();
+            dataCenter.shutdownHardware();
             Platform.exit();
         });
     }
@@ -89,6 +90,7 @@ public class DataCenterGUI extends Application {
             tasks.add(new Task(i, 3 + (int)(Math.random() * 5)));
         }
         dataCenter = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS, tasks);
+        dataCenter.initHardware(false);
     }
     
     private VBox createControlPanel() {
@@ -218,6 +220,7 @@ public class DataCenterGUI extends Application {
     private void resetSimulation() {
         stopSimulation();
         currentEpoch = 0;
+        if (dataCenter != null) dataCenter.shutdownHardware();
         initializeDataCenter();
         dataCenterView.setDataCenter(dataCenter);
         logArea.clear();

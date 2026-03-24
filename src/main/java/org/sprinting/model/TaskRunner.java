@@ -95,6 +95,10 @@ public class TaskRunner {
         return isSprinting;
     }
 
+    public boolean isWorking() {
+        return !taskQueue.isEmpty();
+    }
+
     public int getId() {
         return ID;
     }

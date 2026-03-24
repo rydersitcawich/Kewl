@@ -4,6 +4,7 @@ org/sprinting/model/TaskState.class
 org/sprinting/model/SprintingBellmanDemo.class
 org/sprinting/gui/RackPanel.class
 org/sprinting/model/SprintingBellmanDemo$Result.class
+org/sprinting/hardware/HardwareBridge.class
 org/sprinting/gui/DataCenterView.class
 org/sprinting/model/SprintingBellmanDemo$UtilityDistribution.class
 org/sprinting/model/DataCenter.class
