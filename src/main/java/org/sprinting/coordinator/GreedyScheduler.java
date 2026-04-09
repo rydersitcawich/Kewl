@@ -18,7 +18,7 @@ public class GreedyScheduler {
 
     public void assignTask(Task task) {
         TaskRunner leastLoaded = runners.stream()
-                .min(Comparator.comparingInt(TaskRunner::getTotalWork))
+                .min(Comparator.comparingDouble(TaskRunner::getTotalWork))
                 .orElseThrow();
 
         leastLoaded.addTask(task);

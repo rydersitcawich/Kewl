@@ -21,7 +21,6 @@ public class DataCenter {
     List<TaskRunner> runners;
     GreedyScheduler scheduler;
     List<Task> tasks;
-    private double[] chipTemps;
     private double[] hydrogelStates;
     final int MAX_RACK_SPRINTS = 6;
     SprintCoordinator coordinator; 
@@ -34,7 +33,6 @@ public class DataCenter {
     public DataCenter(int procsPerServer, int serversPerRack, int numRunners, List<Task> init_tasks) {
         this.runners = new LinkedList<>();
         this.tasks = init_tasks;
-        this.chipTemps = new double[numRunners];
         for (int i = 0; i < numRunners; i++) {
             int serverId = i / procsPerServer;
             int rackId = serverId / serversPerRack;
@@ -102,23 +100,11 @@ public class DataCenter {
             scheduler.assignTask(tasks.remove(0));
         }
 
-        for (TaskRunner runner : runners) {
-            runner.evaluateSprint();
+        for (int i = 0; i < runners.size(); i++) {
+            runners.get(i).setHydrogelState(hydrogelStates[i]);
+            runners.get(i).evaluateSprint();
         }
 
-        // Update chip temps and hydrogel states per runner
-        for (int i = 0; i < runners.size(); i++) {
-            double tempChipTemp = chipTemps[i];
-            chipTemps[i] = computeNewTemperature(chipTemps[i],
-                runners.get(i).isSprinting(), hydrogelStates[i]);
-            // Thermal failure only when chip is at max temp AND hydrogel is depleted
-            if (chipTemps[i] >= 1.0 && hydrogelStates[i] == 0.0) {
-                runners.get(i).updateEpochsInRecoveryForThermalFailure();
-            }
-            hydrogelStates[i] = computeNewHydrogelState(tempChipTemp, 
-                runners.get(i).isSprinting(), hydrogelStates[i]);
-        }
-        
         Map<Integer, Integer> sprintersPerRack = new HashMap<>();
         for (TaskRunner runner : runners) {
             if (runner.isSprinting()) {
@@ -139,7 +125,15 @@ public class DataCenter {
             }
         }
 
-        // If no failures then proceed
+        // Update hydrogel states per runner (after power check so sprint state is preserved)
+        for (int i = 0; i < runners.size(); i++) {
+            TaskRunner runner = runners.get(i);
+            hydrogelStates[i] = computeNewHydrogelState(
+                runner.isSprinting(), runner.isWorking(), hydrogelStates[i]);
+            runner.setHydrogelState(hydrogelStates[i]);
+        }
+
+        // Execute tasks and update recovery
         for (TaskRunner runner : runners) {
             runner.executeEpoch();
             runner.updateState();
@@ -159,15 +153,13 @@ public class DataCenter {
         }
     }
 
-    public static double computeNewTemperature(double currentTemp, boolean isSprinting, double hydrogelState) {
-        return isSprinting ? Math.min(1.0, currentTemp + 0.25) : Math.max(0.0, currentTemp - 0.05);
-    }
-
-    public static double computeNewHydrogelState(double currentTemp, boolean isSprinting, double hydrogelState) {
+    public static double computeNewHydrogelState(boolean isSprinting, boolean isWorking, double hydrogelState) {
         if (isSprinting) {
-            return Math.max(0.0, hydrogelState - 0.1);
+            return 0.0; // fully depleted after 1 sprint epoch
+        } else if (isWorking) {
+            return Math.min(1.0, hydrogelState + 0.20); // ~5 epochs to recover
         } else {
-            return Math.min(1.0, hydrogelState + 0.05);
+            return Math.min(1.0, hydrogelState + 0.34); // ~3 epochs to recover
         }
     }
 
@@ -193,17 +185,6 @@ public class DataCenter {
 
     public double[] getHydrogelStates() {
         return hydrogelStates;
-    }
-
-    public double[] getChipTemps() {
-        return chipTemps;
-    }
-
-    public double getChipTemp(int runnerId) {
-        if (runnerId >= 0 && runnerId < chipTemps.length) {
-            return chipTemps[runnerId];
-        }
-        return 0.0;
     }
 
     public double getHydrogelState(int runnerId) {

@@ -20,7 +20,6 @@ public class TaskRunnerPanel extends VBox {
     private Label idLabel;
     private Label workLabel;
     private Pane statusIndicator;
-    private ProgressBar tempBar;
     private ProgressBar hydrogelBar;
     private Tooltip tooltip;
     
@@ -52,11 +51,6 @@ public class TaskRunnerPanel extends VBox {
         workLabel = new Label("W: 0");
         workLabel.setStyle("-fx-font-size: 9px; -fx-text-fill: white;");
         
-        // Temperature bar
-        tempBar = new ProgressBar(0);
-        tempBar.setPrefWidth(60);
-        tempBar.setPrefHeight(12);
-
         // Hydrogel bar
         hydrogelBar = new ProgressBar(0);
         hydrogelBar.setPrefWidth(60);
@@ -66,31 +60,30 @@ public class TaskRunnerPanel extends VBox {
         tooltip = new Tooltip();
         Tooltip.install(this, tooltip);
         
-        getChildren().addAll(idLabel, statusIndicator, workLabel, tempBar, hydrogelBar);
+        getChildren().addAll(idLabel, statusIndicator, workLabel, hydrogelBar);
     }
     
     public void update() {
         // Update work count
-        int totalWork = runner.getTotalWork();
-        workLabel.setText("W: " + totalWork);
+        double totalWork = runner.getTotalWork();
+        workLabel.setText(String.format("W: %.0f", totalWork));
         
-        // Get chip-level data
-        double chipTemp = dataCenter.getChipTemp(runner.getId());
+        // Get hydrogel data
         double hydrogelState = dataCenter.getHydrogelState(runner.getId());
         
         // Determine state and color
         String state;
         String color;
         
-        if (!runner.canSprint()) {
-            // Recovering
-            state = "RECOVERING";
-            color = "#e74c3c"; // Red
-        } else if (runner.isSprinting()) {
-            // Sprinting
+        if (runner.sprintedThisEpoch()) {
+            // Sprinted this epoch
             state = "SPRINTING";
             color = "#f39c12"; // Orange
-        } else if (totalWork > 0) {
+        } else if (!runner.canSprint()) {
+            // Cooling down (hydrogel recovering)
+            state = "COOLING";
+            color = "#e74c3c"; // Red
+        } else if (totalWork > 0.0) {
             // Working normally
             state = "WORKING";
             color = "#f1c40f"; // Yellow
@@ -116,18 +109,6 @@ public class TaskRunnerPanel extends VBox {
             darkenColor(color)
         ));
         
-        // Update temperature bar
-        tempBar.setProgress(chipTemp);
-        if (chipTemp >= 1.0) {
-            setBarColor(tempBar, "#e74c3c"); // Red - at limit
-        } else if (chipTemp >= 0.7) {
-            setBarColor(tempBar, "#f39c12"); // Orange - hot
-        } else if (chipTemp >= 0.4) {
-            setBarColor(tempBar, "#f1c40f"); // Yellow - warm
-        } else {
-            setBarColor(tempBar, "#3498db"); // Blue - cool
-        }
-
         // Update hydrogel bar
         hydrogelBar.setProgress(hydrogelState);
         if (hydrogelState <= 0.2) {
@@ -143,10 +124,9 @@ public class TaskRunnerPanel extends VBox {
             "Runner %d\n" +
             "Server: %d | Rack: %d\n" +
             "State: %s\n" +
-            "Total Work: %d\n" +
+            "Total Work: %.1f\n" +
             "Can Sprint: %s\n" +
             "---\n" +
-            "Chip Temp: %.2f\n" +
             "Hydrogel: %.2f",
             runner.getId(),
             runner.getServerId(),
@@ -154,7 +134,6 @@ public class TaskRunnerPanel extends VBox {
             state,
             totalWork,
             runner.canSprint() ? "Yes" : "No",
-            chipTemp,
             hydrogelState
         ));
     }

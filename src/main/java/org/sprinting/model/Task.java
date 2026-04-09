@@ -5,7 +5,7 @@ import java.util.Random;
 public class Task {
     private final int id;
     private final int duration; // EpochUnits
-    private int remainingEpochUnits;
+    private double remainingEpochUnits;
     private TaskState state;
     private double utility;
     private static int numTasksCreated = 0;
@@ -35,7 +35,7 @@ public class Task {
         System.out.println("Generated utility " + this.utility + " for task " + id);
     }
 
-    public int getDuration() {
+    public double getDuration() {
         return remainingEpochUnits;
     }
 
@@ -56,12 +56,12 @@ public class Task {
 
         state = TaskState.RUNNING;
         if (isSprinting) {
-            remainingEpochUnits -= 2; // sprinting processes 2 units per epoch (assumption)
+            remainingEpochUnits -= (1.0 + utility);
         } else {
-            remainingEpochUnits--;
+            remainingEpochUnits -= 1.0;
         }
         if (remainingEpochUnits <= 0) {
-            remainingEpochUnits = 0;
+            remainingEpochUnits = 0.0;
             state = TaskState.COMPLETED;
         }
     }
@@ -73,6 +73,6 @@ public class Task {
 
     @Override
     public String toString() {
-        return String.format("Task{id='%d', remaining=%d, state=%s}", id, remainingEpochUnits, state);
+        return String.format("Task{id='%d', remaining=%.1f, state=%s}", id, remainingEpochUnits, state);
     }
 }

@@ -90,7 +90,7 @@ public class DataCenterGUI extends Application {
             tasks.add(new Task(i, 3 + (int)(Math.random() * 5)));
         }
         dataCenter = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS, tasks);
-        dataCenter.initHardware(false);
+        dataCenter.initHardware(true);
     }
     
     private VBox createControlPanel() {
@@ -256,38 +256,27 @@ public class DataCenterGUI extends Application {
         int totalRunners = NUM_RUNNERS;
         long sprinting = dataCenter.getRunners().stream().filter(r -> r.isSprinting()).count();
         long recovering = dataCenter.getRunners().stream().filter(r -> !r.canSprint()).count();
-        long idle = dataCenter.getRunners().stream().filter(r -> r.getTotalWork() == 0).count();
+        long idle = dataCenter.getRunners().stream().filter(r -> r.getTotalWork() <= 0.0).count();
         int pendingTasks = dataCenter.getTasks().size();
         
-        // Calculate average chip temperature and hydrogel state
-        double[] chipTemps = dataCenter.getChipTemps();
+        // Calculate average hydrogel state
         double[] hydrogelStates = dataCenter.getHydrogelStates();
-        
-        double avgTemp = 0.0;
+
         double avgHydrogel = 0.0;
-        int overheatedChips = 0;
-        
-        for (int i = 0; i < chipTemps.length; i++) {
-            avgTemp += chipTemps[i];
+        for (int i = 0; i < hydrogelStates.length; i++) {
             avgHydrogel += hydrogelStates[i];
-            if (chipTemps[i] >= 1.0) {
-                overheatedChips++;
-            }
         }
-        avgTemp /= chipTemps.length;
         avgHydrogel /= hydrogelStates.length;
-        
+
         String stats = String.format(
             "Runners: %d\n" +
             "  Sprinting: %d\n" +
             "  Recovering: %d\n" +
             "  Idle: %d\n" +
             "\nPending Tasks: %d\n" +
-            "\nAvg Chip Temp: %.2f\n" +
-            "Overheated Chips: %d\n" +
-            "Avg Hydrogel: %.2f",
-            totalRunners, sprinting, recovering, idle, pendingTasks, 
-            avgTemp, overheatedChips, avgHydrogel
+            "\nAvg Hydrogel: %.2f",
+            totalRunners, sprinting, recovering, idle, pendingTasks,
+            avgHydrogel
         );
         
         statsLabel.setText(stats);

@@ -14,9 +14,10 @@ public class TaskRunner {
     private final int RACK_ID;
     private final Queue<Task> taskQueue;
     private boolean isSprinting;
+    private boolean sprintedThisEpoch; // for GUI display: true during the epoch a sprint occurred
     private double sprintThreshold; // placeholder threshold for utility-based sprinting
-    private int epochsInRecovery; //number of epochs till we have fully recovered. 0 means we are in active state. When we have a power or thermal failure, we set this to some positive integer.
-    private final int COOLING_EPOCHS = 5; //placeholder for num epochs to recover from thermal failure
+    private double hydrogelState = 1.0; // 1.0 = fully saturated, 0.0 = depleted
+    private int epochsInRecovery; //number of epochs till we have fully recovered. 0 means we are in active state. When we have a power failure, we set this to some positive integer.
     private final int POWER_EPOCHS = 5; //placeholder for num epochs to recover from power failure
 
     public TaskRunner(int id, double sprintThreshold, int serverId, int rackId) {
@@ -33,8 +34,8 @@ public class TaskRunner {
         taskQueue.add(task);
     }
 
-    public int getTotalWork() {
-        return taskQueue.stream().mapToInt(Task::getDuration).sum();
+    public double getTotalWork() {
+        return taskQueue.stream().mapToDouble(Task::getDuration).sum();
     }
 
     /**
@@ -42,7 +43,8 @@ public class TaskRunner {
      */
     public void evaluateSprint() {
         isSprinting = false;
-        if (epochsInRecovery > 0) return;
+        sprintedThisEpoch = false;
+        if (!canSprint()) return;
         double utility = calculateUtility();
         if (utility > sprintThreshold) {
             startSprint();
@@ -51,14 +53,15 @@ public class TaskRunner {
 
     private void startSprint() {
         isSprinting = true;
+        sprintedThisEpoch = true;
     }
 
-    private double calculateUtility() { 
+    private double calculateUtility() {
         Task currTask = taskQueue.peek();
         if (currTask == null) {
             return 0.0;
         }
-        return currTask.getUtility(); // a little naive but probably fine...
+        return currTask.getUtility();
     }
 
     public void executeEpoch() {
@@ -82,17 +85,16 @@ public class TaskRunner {
         this.isSprinting = false;
     }
 
-    public void updateEpochsInRecoveryForThermalFailure() {
-        this.epochsInRecovery = Math.max(epochsInRecovery, COOLING_EPOCHS);
-        this.isSprinting = false;
-    }
-
     public boolean canSprint() {
-        return epochsInRecovery == 0;
+        return epochsInRecovery == 0 && hydrogelState >= 1.0;
     }
 
     public boolean isSprinting() {
         return isSprinting;
+    }
+
+    public boolean sprintedThisEpoch() {
+        return sprintedThisEpoch;
     }
 
     public boolean isWorking() {
@@ -120,9 +122,17 @@ public class TaskRunner {
         this.sprintThreshold = newThreshold;
     }
 
+    public double getHydrogelState() {
+        return hydrogelState;
+    }
+
+    public void setHydrogelState(double state) {
+        this.hydrogelState = state;
+    }
+
     @Override
     public String toString() {
-        return String.format("TaskRunner{id='%d', sprinting=%s, totalWork=%d}",
+        return String.format("TaskRunner{id='%d', sprinting=%s, totalWork=%.1f}",
                 ID, isSprinting, getTotalWork());
     }
 }
