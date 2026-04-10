@@ -75,14 +75,18 @@ public class TaskRunnerPanel extends VBox {
         String state;
         String color;
         
-        if (runner.sprintedThisEpoch()) {
+        if (runner.isInPowerRecovery()) {
+            // Rack power recovery
+            state = "RECOVERY";
+            color = "#e74c3c"; // Red
+        } else if (runner.sprintedThisEpoch()) {
             // Sprinted this epoch
             state = "SPRINTING";
             color = "#f39c12"; // Orange
         } else if (!runner.canSprint()) {
             // Cooling down (hydrogel recovering)
             state = "COOLING";
-            color = "#e74c3c"; // Red
+            color = "#3498db"; // Blue
         } else if (totalWork > 0.0) {
             // Working normally
             state = "WORKING";

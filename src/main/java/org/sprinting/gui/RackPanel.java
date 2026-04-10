@@ -27,7 +27,8 @@ public class RackPanel extends VBox {
     private Label powerLabel;
     private ProgressBar powerBar;
     
-    private static final int MAX_RACK_SPRINTS = 6;
+    private static final int RACK_NMIN = 4;   // 20% of N=20, trips start here
+    private static final int RACK_NMAX = 10;  // 50% of N=20, guaranteed trip
     
     public RackPanel(int rackId, List<TaskRunner> runners, int procsPerServer, int serversPerRack, DataCenter dataCenter) {
         this.rackId = rackId;
@@ -61,7 +62,7 @@ public class RackPanel extends VBox {
         VBox powerBox = new VBox(5);
         powerBox.setAlignment(Pos.CENTER);
         
-        powerLabel = new Label("Power: 0 / " + MAX_RACK_SPRINTS + " sprinters");
+        powerLabel = new Label("Sprinters: 0 | Safe < " + RACK_NMIN + " | Trip > " + RACK_NMAX);
         powerLabel.setStyle("-fx-text-fill: white; -fx-font-size: 12px;");
         
         powerBar = new ProgressBar(0);
@@ -114,19 +115,19 @@ public class RackPanel extends VBox {
             }
         }
         
-        powerLabel.setText("Power: " + sprintersCount + " / " + MAX_RACK_SPRINTS + " sprinters");
-        double powerRatio = (double) sprintersCount / MAX_RACK_SPRINTS;
+        powerLabel.setText("Sprinters: " + sprintersCount + " | Safe < " + RACK_NMIN + " | Trip > " + RACK_NMAX);
+        double powerRatio = (double) sprintersCount / RACK_NMAX;
         powerBar.setProgress(powerRatio);
-        
-        // Change color based on power level
-        if (powerRatio > 1.0) {
-            powerBar.setStyle("-fx-accent: #e74c3c;"); // Red - over limit
+
+        // Change color based on position in trip curve
+        if (sprintersCount >= RACK_NMAX) {
+            powerBar.setStyle("-fx-accent: #e74c3c;"); // Red - guaranteed trip
             setStyle("-fx-border-color: #e74c3c; -fx-border-width: 3; -fx-background-color: #2c3e50; -fx-background-radius: 10; -fx-border-radius: 10;");
-        } else if (powerRatio > 0.8) {
-            powerBar.setStyle("-fx-accent: #f39c12;"); // Orange - warning
+        } else if (sprintersCount >= RACK_NMIN) {
+            powerBar.setStyle("-fx-accent: #f39c12;"); // Orange - tolerance band (probabilistic trip)
             setStyle("-fx-border-color: #f39c12; -fx-border-width: 3; -fx-background-color: #2c3e50; -fx-background-radius: 10; -fx-border-radius: 10;");
         } else {
-            powerBar.setStyle("-fx-accent: #2ecc71;"); // Green - normal
+            powerBar.setStyle("-fx-accent: #2ecc71;"); // Green - safe
             setStyle("-fx-border-color: #3498db; -fx-border-width: 3; -fx-background-color: #2c3e50; -fx-background-radius: 10; -fx-border-radius: 10;");
         }
         

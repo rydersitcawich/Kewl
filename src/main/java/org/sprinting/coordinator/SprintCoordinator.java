@@ -17,9 +17,9 @@ public class SprintCoordinator {
     public SprintCoordinator(int recomputeInterval) {
         this.recomputeInterval = recomputeInterval;
         this.params = new SprintingBellmanDemo.Params();
-        // Match simulation's deterministic 5-epoch recovery: geometric mean = 1/(1-p) = 5 → p = 0.8
-        this.params.pc = 0.8;
-        this.params.pr = 0.8;
+        // Match simulation's recovery rates
+        this.params.pc = 0.667;  // 3-epoch working cooldown: 1/(1-pc) = 3
+        this.params.pr = 0.88;   // 8-epoch rack recovery (paper Table 2)
     }
 
     public void onEpoch(List<TaskRunner> runners) {
@@ -34,8 +34,8 @@ public class SprintCoordinator {
 
         int runnersPerRack = 20; // SERVERS_PER_RACK(10) * PROCS_PER_SERVER(2) = 20
         params.N    = runnersPerRack;
-        params.Nmin = 3;   // safe zone: ~15% of 20, below breaker threshold
-        params.Nmax = 6;   // = MAX_RACK_SPRINTS (hard power limit)
+        params.Nmin = 4;   // 20% of N=20, breaker starts tripping
+        params.Nmax = 10;  // 50% of N=20, breaker guaranteed trip
     
         double[] utilities = runners.stream()
             .mapToDouble(r -> r.getCurrentUtility())

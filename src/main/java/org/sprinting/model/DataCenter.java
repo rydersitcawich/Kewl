@@ -22,7 +22,8 @@ public class DataCenter {
     GreedyScheduler scheduler;
     List<Task> tasks;
     private double[] hydrogelStates;
-    final int MAX_RACK_SPRINTS = 6;
+    final int RACK_NMIN = 4;   // 20% of N=20, breaker starts tripping
+    final int RACK_NMAX = 10;  // 50% of N=20, breaker guaranteed trip
     SprintCoordinator coordinator; 
 
     // Hardware bridge for physical demo
@@ -116,7 +117,14 @@ public class DataCenter {
             int rackId = entry.getKey();
             int sprinters = entry.getValue();
         
-            if (sprinters > MAX_RACK_SPRINTS) {
+            boolean tripped = false;
+            if (sprinters >= RACK_NMAX) {
+                tripped = true;
+            } else if (sprinters >= RACK_NMIN) {
+                double pTrip = (double)(sprinters - RACK_NMIN) / (RACK_NMAX - RACK_NMIN);
+                tripped = Math.random() < pTrip;
+            }
+            if (tripped) {
                 for (TaskRunner runner : runners) {
                     if (runner.getRackId() == rackId) {
                         runner.updateEpochsInRecoveryForPowerFailure();
@@ -157,9 +165,9 @@ public class DataCenter {
         if (isSprinting) {
             return 0.0; // fully depleted after 1 sprint epoch
         } else if (isWorking) {
-            return Math.min(1.0, hydrogelState + 0.20); // ~5 epochs to recover
-        } else {
             return Math.min(1.0, hydrogelState + 0.34); // ~3 epochs to recover
+        } else {
+            return Math.min(1.0, hydrogelState + 0.50); // ~2 epochs to recover
         }
     }
 

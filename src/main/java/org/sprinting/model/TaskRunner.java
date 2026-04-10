@@ -18,7 +18,7 @@ public class TaskRunner {
     private double sprintThreshold; // placeholder threshold for utility-based sprinting
     private double hydrogelState = 1.0; // 1.0 = fully saturated, 0.0 = depleted
     private int epochsInRecovery; //number of epochs till we have fully recovered. 0 means we are in active state. When we have a power failure, we set this to some positive integer.
-    private final int POWER_EPOCHS = 5; //placeholder for num epochs to recover from power failure
+    private final int POWER_EPOCHS = 8; // rack power recovery ~8 epochs (paper: pr=0.88)
 
     public TaskRunner(int id, double sprintThreshold, int serverId, int rackId) {
         this.ID = id;
@@ -83,6 +83,11 @@ public class TaskRunner {
     public void updateEpochsInRecoveryForPowerFailure() {
         this.epochsInRecovery = Math.max(epochsInRecovery, POWER_EPOCHS);
         this.isSprinting = false;
+        this.sprintedThisEpoch = false;
+    }
+
+    public boolean isInPowerRecovery() {
+        return epochsInRecovery > 0;
     }
 
     public boolean canSprint() {
