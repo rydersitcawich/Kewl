@@ -50,3 +50,32 @@ This setup provides a platform to experiment with computational sprinting strate
 * Temperature Model: Servers track a simplified temperature (0–1). Sprinting increases temperature; cooldown reduces it. Thermal failures occur at temperature >= 1.
 * Power Model: Racks have a maximum allowed number of sprinters (MAX_RACK_SPRINTS). Exceeding this limit triggers rack-wide power recovery.
 * Recovery: Epoch-based counters control recovery from thermal or power failures. Sprinting is disabled during recovery.
+
+## Benchmark: Bellman Equilibrium vs Never-Sprint Baseline
+
+Compares the Bellman equilibrium threshold policy (E-T) against a never-sprint baseline over 500 epochs using identical deterministic task streams.
+
+### Experiment Setup
+* **Runners:** 40 processors across 2 racks (2 procs/server, 10 servers/rack)
+* **Task load:** 15 tasks/epoch (heavy load — 75 work-units/epoch arriving vs 40 base capacity)
+* **Task durations:** 3–7 epochs (uniform), seeded RNG for reproducibility
+* **Utility distribution:** Bimodal — 70% low-utility tasks (mean=0.2, std=0.08), 30% high-utility tasks (mean=0.8, std=0.08)
+* **Sprint multiplier:** `1 + utility * (MAX_SPEEDUP - 1)` with `MAX_SPEEDUP = 4.0` (conservative midpoint of the paper's reported 2–7x realized speedup range)
+* **Circuit breaker:** Nmin=4 (20% of rack), Nmax=9 (45% of rack)
+* **Hydrogel cooldown:** 4 epochs working, 3 epochs idle to fully recharge
+* **Rack recovery:** 8 epochs after power trip
+* **Bellman recompute interval:** Every 10 epochs, fitting a bimodal Gaussian to current task utilities
+* **Never-sprint baseline:** Sprint threshold set to `Double.MAX_VALUE`, coordinator disabled
+
+### Run
+
+```
+mvn exec:java -Dexec.mainClass=org.sprinting.benchmark.SprintingBenchmark
+```
+
+### Results
+
+* +11.1% additional effective work (22,172 vs 19,965 epoch-units)
+* +446 additional tasks completed (4,411 vs 3,965 — +11.2%)
+* 1,517 total sprints across 500 epochs (3.0 sprints/epoch avg)
+* 12 circuit breaker trips

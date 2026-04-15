@@ -22,7 +22,7 @@ public class DataCenter {
     GreedyScheduler scheduler;
     List<Task> tasks;
     private double[] hydrogelStates;
-    final int RACK_NMIN = 4;   // 20% of N=20, breaker starts tripping
+    final int RACK_NMIN = 5;   // 20% of N=20, breaker starts tripping
     final int RACK_NMAX = 9;  
     SprintCoordinator coordinator; 
 
@@ -212,5 +212,16 @@ public class DataCenter {
 
     public int getEpochCounter() {
         return epochCounter;
+    }
+
+    /**
+     * Lock all runners to a fixed sprint threshold and disable coordinator recomputation.
+     * Used by benchmarks to create a "never sprint" baseline (threshold = Double.MAX_VALUE).
+     */
+    public void setFixedThreshold(double threshold) {
+        for (TaskRunner runner : runners) {
+            runner.setSprintThreshold(threshold);
+        }
+        this.coordinator = new SprintCoordinator(Integer.MAX_VALUE); // effectively never recomputes
     }
 }

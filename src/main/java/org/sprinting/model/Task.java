@@ -51,12 +51,17 @@ public class Task {
         return utility;
     }
 
+    // Paper reports 2-7x realized speedup (12c@2.7GHz vs 3c@1.2GHz = 9x theoretical).
+    // Using conservative midpoint of reported range.
+    public static final double MAX_SPEEDUP = 4.0;
+
     public void executeEpoch(boolean isSprinting) {
         if (state == TaskState.COMPLETED) return;
 
         state = TaskState.RUNNING;
         if (isSprinting) {
-            remainingEpochUnits -= (1.0 + utility);
+            double sprintMultiplier = 1.0 + utility * (MAX_SPEEDUP - 1.0);
+            remainingEpochUnits -= sprintMultiplier;
         } else {
             remainingEpochUnits -= 1.0;
         }
