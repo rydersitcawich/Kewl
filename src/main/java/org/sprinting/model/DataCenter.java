@@ -23,7 +23,7 @@ public class DataCenter {
     List<Task> tasks;
     private double[] hydrogelStates;
     final int RACK_NMIN = 4;   // 20% of N=20, breaker starts tripping
-    final int RACK_NMAX = 10;  // 50% of N=20, breaker guaranteed trip
+    final int RACK_NMAX = 9;  
     SprintCoordinator coordinator; 
 
     // Hardware bridge for physical demo

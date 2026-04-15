@@ -28,7 +28,7 @@ public class RackPanel extends VBox {
     private ProgressBar powerBar;
     
     private static final int RACK_NMIN = 4;   // 20% of N=20, trips start here
-    private static final int RACK_NMAX = 10;  // 50% of N=20, guaranteed trip
+    private static final int RACK_NMAX = 9;  
     
     public RackPanel(int rackId, List<TaskRunner> runners, int procsPerServer, int serversPerRack, DataCenter dataCenter) {
         this.rackId = rackId;
