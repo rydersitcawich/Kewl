@@ -165,9 +165,9 @@ public class DataCenter {
         if (isSprinting) {
             return 0.0; // fully depleted after 1 sprint epoch
         } else if (isWorking) {
-            return Math.min(1.0, hydrogelState + 0.34); // ~3 epochs to recover
+            return Math.min(1.0, hydrogelState + 0.25); // ~4 epochs to recover
         } else {
-            return Math.min(1.0, hydrogelState + 0.50); // ~2 epochs to recover
+            return Math.min(1.0, hydrogelState + 0.34); // ~3 epochs to recover
         }
     }
 
