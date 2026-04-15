@@ -22,7 +22,6 @@ public class GreedyScheduler {
                 .orElseThrow();
 
         leastLoaded.addTask(task);
-        System.out.println("Assigned task " + task + " to " + leastLoaded.getId());
     }
 }
 

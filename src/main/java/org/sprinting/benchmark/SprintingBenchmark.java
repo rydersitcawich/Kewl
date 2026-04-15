@@ -10,23 +10,28 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Compares the Bellman sprinting policy against a never-sprint baseline.
- * Both runs use the same deterministic task stream so the only variable is the sprint policy.
+ * Compares the Bellman sprinting policy against a never-sprint baseline
+ * at paper scale (N=1000, matching Fan et al. ASPLOS'16 Table 2).
  */
 public class SprintingBenchmark {
 
+    // Paper-scale topology: 1 rack of 1000 runners
     private static final int PROCS_PER_SERVER = 2;
-    private static final int SERVERS_PER_RACK = 10;
-    private static final int NUM_RUNNERS = 40;
-    private static final int NUM_EPOCHS = 500;
-    private static final int TASKS_PER_EPOCH = 15; // heavy load: ~75 work units/epoch vs 40 runner capacity
+    private static final int SERVERS_PER_RACK = 500;
+    private static final int NUM_RUNNERS = 1000;
+
+    // Paper Table 2 breaker parameters
+    private static final int RACK_NMIN = 250;  // 25% of N
+    private static final int RACK_NMAX = 750;  // 75% of N
+
+    private static final int NUM_EPOCHS = 1000;
+    private static final int TASKS_PER_EPOCH = 375; // maintain ~same load ratio as before (15/40 * 1000)
     private static final long SEED = 42L;
 
     static class SimResult {
         double[] workPerEpoch = new double[NUM_EPOCHS];
         int totalSprints = 0;
         int totalPowerTrips = 0;
-        double totalSprintBonus = 0;
         int tasksCompleted = 0;
     }
 
@@ -36,15 +41,16 @@ public class SprintingBenchmark {
         List<Task> bellmanTasks = generateTasks(SEED, totalTasks, 0);
         List<Task> noSprintTasks = generateTasks(SEED, totalTasks, totalTasks);
 
-        // Compute total work fed for reference
         double totalWorkFed = bellmanTasks.stream().mapToDouble(Task::getDuration).sum();
 
-        System.out.println("Running Bellman policy...");
-        DataCenter bellmanDC = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS, new ArrayList<>());
+        System.out.println("Running Bellman policy (N=" + NUM_RUNNERS + ", " + NUM_EPOCHS + " epochs)...");
+        DataCenter bellmanDC = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS,
+                new ArrayList<>(), RACK_NMIN, RACK_NMAX);
         SimResult bellman = runSimulation(bellmanDC, bellmanTasks);
 
         System.out.println("Running no-sprint baseline...");
-        DataCenter noSprintDC = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS, new ArrayList<>());
+        DataCenter noSprintDC = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS,
+                new ArrayList<>(), RACK_NMIN, RACK_NMAX);
         noSprintDC.setFixedThreshold(Double.MAX_VALUE);
         SimResult noSprint = runSimulation(noSprintDC, noSprintTasks);
 
@@ -87,7 +93,6 @@ public class SprintingBenchmark {
         SimResult result = new SimResult();
         int taskIdx = 0;
 
-        // Track all tasks ever assigned to count completions
         List<Task> allAssigned = new ArrayList<>();
 
         for (int epoch = 0; epoch < NUM_EPOCHS; epoch++) {
@@ -98,7 +103,6 @@ public class SprintingBenchmark {
             dc.addTasks(batch);
             allAssigned.addAll(batch);
 
-            // Snapshot power recovery state before epoch
             boolean[] wasInRecovery = new boolean[NUM_RUNNERS];
             for (int i = 0; i < NUM_RUNNERS; i++) {
                 wasInRecovery[i] = dc.getRunners().get(i).isInPowerRecovery();
@@ -110,7 +114,6 @@ public class SprintingBenchmark {
 
             result.workPerEpoch[epoch] = workBefore - workAfter;
 
-            // Count sprinters
             int sprintersThisEpoch = 0;
             for (TaskRunner r : dc.getRunners()) {
                 if (r.sprintedThisEpoch()) {
@@ -119,16 +122,20 @@ public class SprintingBenchmark {
             }
             result.totalSprints += sprintersThisEpoch;
 
-            // Detect new power trips
             for (int i = 0; i < NUM_RUNNERS; i++) {
                 if (!wasInRecovery[i] && dc.getRunners().get(i).isInPowerRecovery()) {
                     result.totalPowerTrips++;
                     break;
                 }
             }
+
+            // Progress indicator every 100 epochs
+            if ((epoch + 1) % 100 == 0) {
+                System.out.printf("  epoch %d/%d (sprinters this epoch: %d)%n",
+                        epoch + 1, NUM_EPOCHS, sprintersThisEpoch);
+            }
         }
 
-        // Count completed tasks
         for (Task t : allAssigned) {
             if (t.getState() == TaskState.COMPLETED) {
                 result.tasksCompleted++;
@@ -150,7 +157,7 @@ public class SprintingBenchmark {
             bellmanTotal += bellman.workPerEpoch[i];
             noSprintTotal += noSprint.workPerEpoch[i];
 
-            if (i == 0 || i == NUM_EPOCHS - 1 || (i + 1) % 50 == 0) {
+            if (i == 0 || i == NUM_EPOCHS - 1 || (i + 1) % 100 == 0) {
                 System.out.printf("%-8d | %14.1f | %14.1f | %14.1f | %14.1f%n",
                         i + 1, bellman.workPerEpoch[i], noSprint.workPerEpoch[i],
                         bellmanTotal, noSprintTotal);
@@ -162,7 +169,7 @@ public class SprintingBenchmark {
 
         System.out.println();
         System.out.println("=== RESULTS ===");
-        System.out.printf("Total work fed:           %,.1f epoch-units across %d tasks%n",
+        System.out.printf("Total work fed:           %,.1f epoch-units across %,d tasks%n",
                 totalWorkFed, NUM_EPOCHS * TASKS_PER_EPOCH);
         System.out.println();
         System.out.printf("Bellman total work:       %,.1f%n", bellmanTotal);

@@ -22,9 +22,9 @@ public class DataCenter {
     GreedyScheduler scheduler;
     List<Task> tasks;
     private double[] hydrogelStates;
-    final int RACK_NMIN = 5;   // 20% of N=20, breaker starts tripping
-    final int RACK_NMAX = 9;  
-    SprintCoordinator coordinator; 
+    private int RACK_NMIN;
+    private int RACK_NMAX;
+    SprintCoordinator coordinator;
 
     // Hardware bridge for physical demo
     private HardwareBridge hwBridge;
@@ -32,8 +32,16 @@ public class DataCenter {
     private int epochCounter = 0;
 
     public DataCenter(int procsPerServer, int serversPerRack, int numRunners, List<Task> init_tasks) {
+        this(procsPerServer, serversPerRack, numRunners, init_tasks, 5, 9);
+    }
+
+    public DataCenter(int procsPerServer, int serversPerRack, int numRunners, List<Task> init_tasks,
+                       int rackNmin, int rackNmax) {
+        this.RACK_NMIN = rackNmin;
+        this.RACK_NMAX = rackNmax;
         this.runners = new LinkedList<>();
         this.tasks = init_tasks;
+        int runnersPerRack = procsPerServer * serversPerRack;
         for (int i = 0; i < numRunners; i++) {
             int serverId = i / procsPerServer;
             int rackId = serverId / serversPerRack;
@@ -42,7 +50,7 @@ public class DataCenter {
         scheduler = new GreedyScheduler(runners);
         hydrogelStates = new double[numRunners];
         Arrays.fill(hydrogelStates, 1.0); // start fully charged
-        this.coordinator = new SprintCoordinator(10); // thresholds are recomputed every 10 epochs
+        this.coordinator = new SprintCoordinator(10, runnersPerRack, rackNmin, rackNmax);
     }
 
     /**

@@ -14,8 +14,20 @@ public class SprintCoordinator {
     // Bellman solver parameters — match Table 2
     private final SprintingBellmanDemo.Params params;
 
+    // Rack topology for Bellman solver
+    private final int runnersPerRack;
+    private final int nmin;
+    private final int nmax;
+
     public SprintCoordinator(int recomputeInterval) {
+        this(recomputeInterval, 20, 5, 9);
+    }
+
+    public SprintCoordinator(int recomputeInterval, int runnersPerRack, int nmin, int nmax) {
         this.recomputeInterval = recomputeInterval;
+        this.runnersPerRack = runnersPerRack;
+        this.nmin = nmin;
+        this.nmax = nmax;
         this.params = new SprintingBellmanDemo.Params();
         // Match simulation's recovery rates
         this.params.pc = 0.667;  // 3-epoch working cooldown: 1/(1-pc) = 3
@@ -32,10 +44,9 @@ public class SprintCoordinator {
 
     private void recomputeThresholds(List<TaskRunner> runners) {
 
-        int runnersPerRack = 20; // SERVERS_PER_RACK(10) * PROCS_PER_SERVER(2) = 20
         params.N    = runnersPerRack;
-        params.Nmin = 4;   // 20% of N=20, breaker starts tripping
-        params.Nmax = 10;  // 50% of N=20, breaker guaranteed trip
+        params.Nmin = nmin;
+        params.Nmax = nmax;
     
         double[] utilities = runners.stream()
             .mapToDouble(r -> r.getCurrentUtility())

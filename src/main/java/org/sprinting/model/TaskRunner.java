@@ -19,6 +19,7 @@ public class TaskRunner {
     private double hydrogelState = 1.0; // 1.0 = fully saturated, 0.0 = depleted
     private int epochsInRecovery; //number of epochs till we have fully recovered. 0 means we are in active state. When we have a power failure, we set this to some positive integer.
     private final int POWER_EPOCHS = 8; // rack power recovery ~8 epochs (paper: pr=0.88)
+    private double cachedTotalWork = 0.0; // cached sum of remaining epoch units across all tasks
 
     public TaskRunner(int id, double sprintThreshold, int serverId, int rackId) {
         this.ID = id;
@@ -32,10 +33,11 @@ public class TaskRunner {
 
     public void addTask(Task task) {
         taskQueue.add(task);
+        cachedTotalWork += task.getDuration();
     }
 
     public double getTotalWork() {
-        return taskQueue.stream().mapToDouble(Task::getDuration).sum();
+        return cachedTotalWork;
     }
 
     /**
@@ -67,7 +69,9 @@ public class TaskRunner {
     public void executeEpoch() {
         if (!taskQueue.isEmpty()) {
             Task current = taskQueue.peek();
+            double before = current.getDuration();
             current.executeEpoch(this.isSprinting());
+            cachedTotalWork -= (before - current.getDuration());
             if (current.getState() == TaskState.COMPLETED) {
                 taskQueue.poll();
             }
