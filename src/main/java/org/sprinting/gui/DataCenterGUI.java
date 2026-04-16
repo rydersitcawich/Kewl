@@ -39,7 +39,7 @@ public class DataCenterGUI extends Application {
     private static final int PROCS_PER_SERVER = 2;
     private static final int SERVERS_PER_RACK = 10;
     private static final int NUM_RUNNERS = 40;
-    private static final int INITIAL_TASKS = 20;
+    private static final int INITIAL_TASKS = 200;
 
     @Override
     public void start(Stage primaryStage) {

@@ -59,7 +59,7 @@ Compares the Bellman equilibrium threshold policy (E-T) against a never-sprint b
 * **Runners:** 1,000 processors in 1 rack (2 procs/server, 500 servers/rack), matching the paper's N=1000
 * **Task load:** 375 tasks/epoch (heavy load — ~1,875 work-units/epoch arriving vs 1,000 base capacity)
 * **Task durations:** 3–7 epochs (uniform), seeded RNG for reproducibility
-* **Utility distribution:** Bimodal — 70% low-utility tasks (mean=0.2, std=0.08), 30% high-utility tasks (mean=0.8, std=0.08)
+* **Utility distribution:** Bimodal — 50% low-utility tasks (mean=0.15, std=0.10), 50% high-utility tasks (mean=0.75, std=0.15)
 * **Sprint multiplier:** `1 + utility * (MAX_SPEEDUP - 1)` with `MAX_SPEEDUP = 4.0` (conservative midpoint of the paper's reported 2–7x realized speedup range)
 * **Circuit breaker:** Nmin=250 (25% of N), Nmax=750 (75% of N), matching paper Table 2
 * **Hydrogel cooldown:** 4 epochs working, 3 epochs idle to fully recharge
@@ -75,7 +75,7 @@ mvn exec:java -Dexec.mainClass=org.sprinting.benchmark.SprintingBenchmark
 
 ### Results
 
-* +12.2% additional effective work (1,121,195 vs 999,125 epoch-units)
-* +24,407 additional tasks completed (223,807 vs 199,400 — +12.2%)
-* 77,601 total sprints across 1,000 epochs (77.6 sprints/epoch avg)
+* +16.4% additional effective work (1,162,984 vs 999,125 epoch-units)
+* +32,819 additional tasks completed (232,219 vs 199,400 — +16.5%)
+* 109,500 total sprints across 1,000 epochs (109.5 sprints/epoch avg)
 * 0 circuit breaker trips

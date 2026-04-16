@@ -1,9 +1,11 @@
+org/sprinting/benchmark/SprintingBenchmark.class
 org/sprinting/model/Task.class
 org/sprinting/model/SprintingBellmanDemo$Params.class
 org/sprinting/model/TaskState.class
 org/sprinting/model/SprintingBellmanDemo$Result.class
 org/sprinting/model/SprintingBellmanDemo$UtilityDistribution.class
 org/sprinting/model/DataCenter.class
+org/sprinting/benchmark/SprintingBenchmark$SimResult.class
 org/sprinting/coordinator/GreedyScheduler.class
 org/sprinting/model/SprintingBellmanDemo$NarrowGaussian.class
 org/sprinting/gui/DataCenterGUI.class

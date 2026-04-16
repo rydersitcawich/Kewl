@@ -37,7 +37,7 @@ public class TaskRunner {
     }
 
     public double getTotalWork() {
-        return cachedTotalWork;
+        return taskQueue.isEmpty() ? 0.0 : Math.max(0.0, cachedTotalWork);
     }
 
     /**
@@ -85,7 +85,10 @@ public class TaskRunner {
     }
 
     public void updateEpochsInRecoveryForPowerFailure() {
-        this.epochsInRecovery = Math.max(epochsInRecovery, POWER_EPOCHS);
+        // Stagger recovery to avoid thundering herd (all runners exiting recovery
+        // simultaneously, sprinting at once, and immediately re-tripping the breaker)
+        int stagger = (int)(Math.random() * 3); // 0-2 epoch jitter
+        this.epochsInRecovery = Math.max(epochsInRecovery, POWER_EPOCHS + stagger);
         this.isSprinting = false;
         this.sprintedThisEpoch = false;
     }

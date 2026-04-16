@@ -24,12 +24,12 @@ public class Task {
         this.duration = duration;
         this.remainingEpochUnits = duration;
         this.state = TaskState.PENDING;
-        // 70% of tasks have low utility, 30% have high utility
+        // Bimodal matching Spark workloads: ~50% low-parallelism, ~50% high-parallelism
         Random rand = new Random();
-        if (rand.nextDouble() < 0.7) {
-            this.utility = clampedNormal(0.2, 0.08); // low-benefit tasks
+        if (rand.nextDouble() < 0.5) {
+            this.utility = clampedNormal(0.15, 0.10); // low-benefit phases
         } else {
-            this.utility = clampedNormal(0.8, 0.08); // high-benefit tasks
+            this.utility = clampedNormal(0.75, 0.15); // high-benefit phases
         }
         numTasksCreated++;
         System.out.println("Generated utility " + this.utility + " for task " + id);

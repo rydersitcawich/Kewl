@@ -62,11 +62,14 @@ public class SprintingBenchmark {
         List<Task> tasks = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             int duration = 3 + rng.nextInt(5); // 3-7 epochs
+            // Wider bimodal matching Spark workloads (paper Fig. 10):
+            // ~50% low-parallelism phases, ~50% high-parallelism phases
+            // with higher variance to create meaningful selectivity for the Bellman solver
             double utility;
-            if (rng.nextDouble() < 0.7) {
-                utility = clampedNormal(rng, 0.2, 0.08);
+            if (rng.nextDouble() < 0.5) {
+                utility = clampedNormal(rng, 0.15, 0.10); // low-benefit phases
             } else {
-                utility = clampedNormal(rng, 0.8, 0.08);
+                utility = clampedNormal(rng, 0.75, 0.15); // high-benefit phases (wide spread)
             }
             tasks.add(new Task(idOffset + i, duration, utility));
         }
