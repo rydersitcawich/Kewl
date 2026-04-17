@@ -90,7 +90,7 @@ public class DataCenterGUI extends Application {
             tasks.add(new Task(i, 3 + (int)(Math.random() * 5)));
         }
         dataCenter = new DataCenter(PROCS_PER_SERVER, SERVERS_PER_RACK, NUM_RUNNERS, tasks);
-        dataCenter.initHardware(true);
+        dataCenter.initHardware(false);
     }
     
     private VBox createControlPanel() {

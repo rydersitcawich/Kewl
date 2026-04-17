@@ -62,14 +62,14 @@ public class DataCenter {
     public void initHardware(boolean dryRun) {
         try {
             if (dryRun) {
-                hwBridge = new HardwareBridge("python3", "hardware_bridge.py", "--dry-run");
+                hwBridge = new HardwareBridge(".venv/bin/python3", "hardware_bridge.py", "--dry-run");
             } else {
-                hwBridge = new HardwareBridge("python3", "hardware_bridge.py",
-                    "--visa-resource", "USB0::1689::913::C010738::0::INSTR",
-                    "--sprint-voltage", "5.0",
+                hwBridge = new HardwareBridge(".venv/bin/python3", "hardware_bridge.py",
+                    "--visa-resource", "USB0::1689::913::C010733::0::INSTR",
+                    "--sprint-voltage", "8.5",
                     "--work-voltage",   "2.5",
                     "--idle-voltage",   "0.0",
-                    "--current-limit",  "1.0");
+                    "--current-limit",  "2.0");
             }
             hwBridge.start();
         } catch (Exception e) {
